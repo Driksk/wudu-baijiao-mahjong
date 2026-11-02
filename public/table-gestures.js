@@ -61,12 +61,26 @@ export class TableGestures {
       model.scale.setScalar(10);model.position.copy(bones.get('wrist').position).multiplyScalar(-10);
       this.hand.add(model);this.hand.quaternion.setFromAxisAngle(new T.Vector3(1,1,1).normalize(),2*Math.PI/3);
       this.ready=true;
-    });
+    },undefined,()=>this.buildFallbackHand(skin));
     this.cup=cup();this.cig=cigarette();this.seat.add(this.cup,this.cig);
     this.puffs=Array.from({length:12},(_,i)=>{
       if(i===0)this.haze=haze();
       const puff=new T.Sprite(new T.SpriteMaterial({map:this.haze,depthWrite:false,transparent:true}));this.seat.add(puff);return puff;
     });
+  }
+  buildFallbackHand(skin){
+    // Production-safe fallback when the optional GLB hand is unavailable.
+    const palm=part(this.hand,new T.SphereGeometry(.30,20,14),skin,0,-.03,-.10);
+    palm.scale.set(.78,.32,1.14);
+    for(let i=0;i<4;i++){
+      const x=(i-1.5)*.14;
+      const finger=part(this.hand,new T.CapsuleGeometry(.065,.24,8,12),skin,x,.02,-.40);
+      finger.rotation.x=-.20; finger.scale.z=1-(i===0?.10:0);
+    }
+    const thumb=part(this.hand,new T.CapsuleGeometry(.075,.22,8,12),skin,-.28,-.02,-.12);
+    thumb.rotation.set(.35,.15,-.82);
+    this.hand.quaternion.setFromEuler(new T.Euler(-.15,.05,.05));
+    this.ready=true;
   }
   play(kind,seat,tile){
     if(!['tea','smoke','discard'].includes(kind))return;
